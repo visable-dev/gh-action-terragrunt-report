@@ -1,0 +1,12 @@
+name: 'Terragrunt report checks'
+description: 'Visualizes multiple terraform plan outputs after `terragrunt run-all plan` run'
+inputs:
+  plan_file_suffix:
+    description: 'Suffix of the plan output files. Whole workspace will be scanned for such files.'
+    required: true
+    default: '.plan'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.plan_file_suffix }}

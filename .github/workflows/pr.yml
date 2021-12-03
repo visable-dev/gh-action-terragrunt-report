@@ -1,0 +1,28 @@
+name: PR
+on:
+  pull_request:
+
+jobs:
+  test:
+    name: 'Terragrunt'
+    runs-on: ubuntu-latest
+    env:
+      tf_version: 'latest'
+      tg_version: 'latest'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v1.1.1
+        with:
+          terragrunt_version: latest
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_wrapper: false
+      - name: Plan all
+        run: |
+          cd test
+          terragrunt run-all plan
+      - name: Report plans
+        uses: ./
