@@ -1,0 +1,50 @@
+{
+  "name": "terragrunt-report-checks",
+  "version": "1.0.0",
+  "description": "Visualizes multiple terraform plan outputs after `terragrunt run-all plan` run",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "gts lint",
+    "clean": "gts clean",
+    "compile": "ncc build src/index.ts -o dist --source-map --license LICENSE",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/littldr/terragrunt-report-checks.git"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "keywords": [
+    "actions",
+    "github",
+    "terraform",
+    "terragrunt"
+  ],
+  "type": "module",
+  "author": {
+    "name": "Andreas Litt",
+    "url": "https://github.com/littldr"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/littldr/terragrunt-report-checks/issues"
+  },
+  "homepage": "https://github.com/littldr/terragrunt-report-checks#readme",
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/github": "^5.0.0",
+    "@actions/glob": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^14.11.2",
+    "@vercel/ncc": "^0.33.1",
+    "gts": "^3.1.0",
+    "typescript": "^4.0.3"
+  }
+}

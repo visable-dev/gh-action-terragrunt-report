@@ -1,4 +1,6 @@
 .terraform
 *.generated.tf
-test/states
-*.plan
+example_project/states
+*.tfplan
+*.diff
+node_modules/

@@ -1,12 +1,15 @@
 name: 'Terragrunt report checks'
 description: 'Visualizes multiple terraform plan outputs after `terragrunt run-all plan` run'
 inputs:
-  plan_file_suffix:
-    description: 'Suffix of the plan output files. Whole workspace will be scanned for such files.'
-    required: true
-    default: '.plan'
+  github_token:
+    description: 'GitHub token used to post comments on pull requests.'
+    default: ${{ github.token }}
+  diff_file_suffix:
+    description: 'Suffix of the diff output files. Whole workspace will be scanned for such files. Please refer to the README of this project to see how to create these diff files.'
+    default: '.diff'
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
-  args:
-    - ${{ inputs.plan_file_suffix }}
+  using: 'node16'
+  main: 'dist/index.js'
+branding:
+  icon: rotate-ccw
+  color: 'gray-dark'
