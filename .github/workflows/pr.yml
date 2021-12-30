@@ -22,7 +22,7 @@ jobs:
           terraform_wrapper: false
       - name: Plan all
         run: |
-          cd test
+          cd example_project
           terragrunt run-all plan
       - name: Report plans
         uses: ./
