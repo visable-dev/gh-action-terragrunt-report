@@ -7,10 +7,10 @@ import {promises} from 'fs';
 const inputs = {
   github_token: core.getInput('github_token', {required: true}),
   diff_file_suffix: core.getInput('diff_file_suffix', {required: true}),
+  search_path: core.getInput('search_path', {required: true}),
 };
 
 const ctx = github.context;
-const workspace = process.env.GITHUB_WORKSPACE || '';
 
 const errorHandler: NodeJS.UncaughtExceptionListener = error => {
   core.setFailed(error);
@@ -36,7 +36,9 @@ async function run() {
 
   const prLines = [];
 
-  const globber = await glob.create(`**/*${inputs.diff_file_suffix}`);
+  const globber = await glob.create(
+    `${inputs.search_path}/**/*${inputs.diff_file_suffix}`
+  );
   for await (const file of globber.globGenerator()) {
     core.info(`Processing file ${file}`);
 
@@ -50,7 +52,7 @@ async function run() {
     const summaryLine = `##### Plan: \`${summary[1]}\` to add, \`${summary[2]}\` to change, \`${summary[3]}\` to destroy.`;
     core.info(`SummaryLine: ${summaryLine}`);
 
-    const prettyFilename = file.replace(workspace, '');
+    const prettyFilename = file.replace(inputs.search_path, '');
     prLines.push(`
 #### \`${prettyFilename}\`:
 ${summaryLine}

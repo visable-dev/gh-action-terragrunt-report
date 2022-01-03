@@ -5,8 +5,11 @@ inputs:
     description: 'GitHub token used to post comments on pull requests.'
     default: ${{ github.token }}
   diff_file_suffix:
-    description: 'Suffix of the diff output files. Whole workspace will be scanned for such files. Please refer to the README of this project to see how to create these diff files.'
+    description: 'Suffix of the diff output files. Whole `search_path` will be scanned for such files. Please refer to the README of this project to see how to create these diff files.'
     default: '.diff'
+  search_path:
+    description: 'Path used to search for diff files.'
+    default: ${{ github.workspace }}
 runs:
   using: 'node16'
   main: 'dist/index.js'

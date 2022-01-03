@@ -72,6 +72,7 @@ The following inputs can be adjusted if necessary:
 | ----- | ------- | ----------- |
 | `github_token` | `${{ github.token }}` | Token used to post comment. |
 | `diff_file_suffix` | `.diff` | Suffix of the diff output files. Whole workspace will be scanned for such files. |
+| `search_path` | `${{ github.workspace }}` | Path used to search for diff files. |
 
 ## Screenshots
 

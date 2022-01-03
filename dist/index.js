@@ -10816,9 +10816,9 @@ const fs_1 = __nccwpck_require__(7147);
 const inputs = {
     github_token: core.getInput('github_token', { required: true }),
     diff_file_suffix: core.getInput('diff_file_suffix', { required: true }),
+    search_path: core.getInput('search_path', { required: true }),
 };
 const ctx = github.context;
-const workspace = process.env.GITHUB_WORKSPACE || '';
 const errorHandler = error => {
     core.setFailed(error);
     // eslint-disable-next-line no-process-exit
@@ -10837,7 +10837,7 @@ async function run() {
         throw 'Cannot execute action on closed pull request!';
     }
     const prLines = [];
-    const globber = await glob.create(`**/*${inputs.diff_file_suffix}`);
+    const globber = await glob.create(`${inputs.search_path}/**/*${inputs.diff_file_suffix}`);
     for await (const file of globber.globGenerator()) {
         core.info(`Processing file ${file}`);
         const diff = `${await fs_1.promises.readFile(file)}`;
@@ -10848,7 +10848,7 @@ async function run() {
         }
         const summaryLine = `##### Plan: \`${summary[1]}\` to add, \`${summary[2]}\` to change, \`${summary[3]}\` to destroy.`;
         core.info(`SummaryLine: ${summaryLine}`);
-        const prettyFilename = file.replace(workspace, '');
+        const prettyFilename = file.replace(inputs.search_path, '');
         prLines.push(`
 #### \`${prettyFilename}\`:
 ${summaryLine}
