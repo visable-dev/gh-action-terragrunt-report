@@ -1,6 +1,6 @@
 .terraform
 *.generated.tf
-example_project/states
 *.tfplan
 *.diff
 node_modules/
+.DS_Store

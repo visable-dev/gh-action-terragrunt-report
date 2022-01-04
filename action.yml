@@ -1,18 +1,28 @@
 name: 'Terragrunt report checks'
-description: 'Visualizes multiple terraform plan outputs after `terragrunt run-all plan` run'
+description: 'Visualizes multiple terraform plan via status checks after `terragrunt run-all plan` run'
 inputs:
   github_token:
-    description: 'GitHub token used to post comments on pull requests.'
+    description: 'GitHub token used to interact with GitHub API.'
     default: ${{ github.token }}
+    required: false
   diff_file_suffix:
     description: 'Suffix of the diff output files. Whole `search_path` will be scanned for such files. Please refer to the README of this project to see how to create these diff files.'
     default: '.diff'
+    required: false
   search_path:
     description: 'Path used to search for diff files.'
     default: ${{ github.workspace }}
+    required: false
+  pretty_name_regex:
+    description: 'Regex to prettify the name used for status checks. Will be applied on filename of every found diff file. Included capture groups will be joined with `pretty_name_separator` and used as name of status check. If not present or not groups matched, the path to the diff file will be used.'
+    required: false
+  pretty_name_separator:
+    description: 'Separator used to create status check name. Only used if `pretty_name_regex` is set.'
+    required: false
+    default: '/'
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: node16
+  main: dist/index.js
 branding:
   icon: rotate-ccw
-  color: 'gray-dark'
+  color: gray-dark
