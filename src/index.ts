@@ -68,7 +68,7 @@ ${diff}
     prLines.push(`
 #### :warning: No matching diff file found!
 
-Please read the [setup instructions](https://github.com/littldr/gh-terragrunt-report-action#usage) and ensure that you configured terragrunt correctly!
+Please read the [setup instructions](https://github.com/littldr/gh-action-terragrunt-report#usage) and ensure that you configured terragrunt correctly!
 `);
   }
   const body = `

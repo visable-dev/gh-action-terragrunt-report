@@ -1,5 +1,5 @@
 {
-  "name": "gh-terragrunt-report-action",
+  "name": "gh-action-terragrunt-report",
   "version": "1.0.0",
   "description": "Visualizes multiple terraform plan outputs after `terragrunt run-all plan` run",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/littldr/gh-terragrunt-report-action.git"
+    "url": "git+https://github.com/littldr/gh-action-terragrunt-report.git"
   },
   "engines": {
     "node": ">=16"
@@ -33,9 +33,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/littldr/gh-terragrunt-report-action/issues"
+    "url": "https://github.com/littldr/gh-action-terragrunt-report/issues"
   },
-  "homepage": "https://github.com/littldr/gh-terragrunt-report-action#readme",
+  "homepage": "https://github.com/littldr/gh-action-terragrunt-report#readme",
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.0",

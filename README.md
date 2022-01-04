@@ -1,4 +1,4 @@
-# gh-terragrunt-report-action
+# gh-action-terragrunt-report
 
 Github Action which post multiple terraform plan outputs as comment in pull requests.
 
@@ -61,7 +61,7 @@ jobs:
           cd example_project
           terragrunt run-all plan
       - name: Report plans
-        uses: littldr/gh-terragrunt-report-action@v1
+        uses: visable-dev/gh-action-terragrunt-report@v2
 ```
 
 ## Inputs
