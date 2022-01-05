@@ -23,7 +23,6 @@
     "terraform",
     "terragrunt"
   ],
-  "type": "module",
   "author": {
     "name": "Andreas Litt",
     "url": "https://github.com/littldr"
