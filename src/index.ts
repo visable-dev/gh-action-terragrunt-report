@@ -122,7 +122,7 @@ ${diff}
   if (checks.length === 0) {
     checks.push({
       ...ctx.repo,
-      head_sha: ctx.sha,
+      head_sha: pullRequest.head.sha,
       name: 'Terragrunt Report',
       conclusion: 'failure',
       output: {
