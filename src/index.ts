@@ -1,8 +1,8 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import * as artifact from '@actions/artifact';
 import * as glob from '@actions/glob';
 import {PullRequestEvent} from '@octokit/webhooks-definitions/schema';
-import {Endpoints} from '@octokit/types';
 import {promises} from 'fs';
 
 const inputs = {
@@ -32,6 +32,25 @@ if (inputs.pretty_name_regex !== '') {
   core.info(`Using regex ${prettyNameRegex} to prettify name.`);
 }
 
+interface Result {
+  filename?: string;
+  prettyFilename?: string;
+  check: Check;
+}
+interface Check {
+  [parameter: string]: unknown;
+  owner: string;
+  repo: string;
+  head_sha: string;
+  name: string;
+  conclusion: 'failure' | 'neutral' | 'success';
+  output: {
+    title: string;
+    summary: string;
+    text: string;
+  };
+}
+
 const diffChangeRegex =
   /^Plan: (\d+) to add, (\d+) to change, (\d+) to destroy./m;
 
@@ -45,17 +64,15 @@ async function run() {
     throw 'Cannot execute action on closed pull request!';
   }
 
-  const checks: Array<
-    Endpoints['POST /repos/{owner}/{repo}/check-runs']['parameters']
-  > = [];
+  const results: Array<Result> = [];
 
   const globber = await glob.create(
     `${inputs.search_path}/**/*${inputs.diff_file_suffix}`
   );
-  for await (const file of globber.globGenerator()) {
-    core.info(`Processing file ${file}`);
+  for await (const filename of globber.globGenerator()) {
+    core.info(`Processing file ${filename}`);
 
-    const diff = `${await promises.readFile(file)}`;
+    const diff = `${await promises.readFile(filename)}`;
     let plan = {
       add: 0,
       change: 0,
@@ -69,7 +86,7 @@ async function run() {
       const res = diff.match(diffChangeRegex);
       if (res === null) {
         console.error(diff);
-        throw `File ${file} has wrong format! Please ensure that \`diff_file_suffix\` only points to valid diff files.`;
+        throw `File ${filename} has wrong format! Please ensure that \`diff_file_suffix\` only points to valid diff files.`;
       }
       plan = {
         add: Number(res[1]),
@@ -82,7 +99,7 @@ async function run() {
 
     core.info(`Summary: ${summary}`);
 
-    const prettyFilename = file.replace(inputs.search_path, '');
+    const prettyFilename = filename.replace(inputs.search_path, '');
     let name = prettyFilename;
 
     if (prettyNameRegex) {
@@ -103,41 +120,67 @@ async function run() {
     if (plan.add > 0 || plan.change > 0 || plan.destroy > 0) {
       conclusion = 'neutral';
     }
-    checks.push({
-      ...ctx.repo,
-      head_sha: pullRequest.head.sha,
-      name: name,
-      conclusion: conclusion,
-      output: {
-        title: summary,
-        summary: `Please find below the full plan for \`${prettyFilename}\`.`,
-        text: `
+
+    results.push({
+      filename,
+      prettyFilename,
+      check: {
+        ...ctx.repo,
+        head_sha: pullRequest.head.sha,
+        name: name,
+        conclusion: conclusion,
+        output: {
+          title: summary,
+          summary: `Please find below the full plan for \`${prettyFilename}\`.`,
+          text: `
 \`\`\`terraform
 ${diff}
 \`\`\`
 `,
+        },
       },
     });
   }
-  if (checks.length === 0) {
-    checks.push({
-      ...ctx.repo,
-      head_sha: ctx.sha,
-      name: 'Terragrunt Report',
-      conclusion: 'failure',
-      output: {
-        title: 'No diff files found!',
-        summary: 'No diff files found!',
-        text: 'Please read the [setup instructions](https://github.com/visable-dev/gh-action-terragrunt-report#usage) and ensure that you configured terragrunt correctly!',
+  if (results.length === 0) {
+    results.push({
+      check: {
+        ...ctx.repo,
+        head_sha: pullRequest.head.sha,
+        name: 'Terragrunt Report',
+        conclusion: 'failure',
+        output: {
+          title: 'No diff files found!',
+          summary: 'No diff files found!',
+          text: 'Please read the [setup instructions](https://github.com/visable-dev/gh-action-terragrunt-report#usage) and ensure that you configured terragrunt correctly!',
+        },
       },
     });
   }
 
+  const linkToActionRunOverview = `${ctx.serverUrl}/${ctx.repo.owner}/${ctx.repo.repo}/actions/runs/${ctx.runId}`;
+
   const octokit = github.getOctokit(inputs.github_token);
-  for (const check of checks) {
-    const result = await octokit.rest.checks.create(check);
+  for (const result of results) {
+    const check = result.check;
+    if (check.output.text.length > 65535 && result.filename) {
+      // output.text cannot be bigger than 65535, therefore upload diff file as artifact
+      // and replace output.text with hint
+      const artifactClient = artifact.create();
+      // Following characters are not allowed as artifact name: Double quote ", Colon :, Less than <, Greater than >, Vertical bar |, Asterisk *, Question mark ?, Carriage return \r, Line feed \n, Backslash \, Forward slash /
+      // See: https://github.com/actions/toolkit/blob/main/packages/artifact/src/internal/path-and-artifact-name-validation.ts#L11
+      const artifactName = check.name.replace(/[/\\<>"':|*?\r\n]/g, '-');
+      await artifactClient.uploadArtifact(
+        artifactName,
+        [result.filename],
+        inputs.search_path,
+        {continueOnError: true}
+      );
+      check.output.text = `File ${result.prettyFilename} is too big. It was uploaded as an artifact. Please download it from [the actions overview of this run](${linkToActionRunOverview}).`;
+    }
+
+    const resp = await octokit.rest.checks.create(check);
     core.info(
-      `Created check ${result.data.name} (${result.data.id}): ${result.data.html_url}`
+      `Created check ${resp.data.name} (${resp.data.id}): ${resp.data.html_url}`
     );
   }
 }
