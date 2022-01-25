@@ -104,6 +104,7 @@ The following inputs can be adjusted if necessary:
 | `search_path` | `${{ github.workspace }}` | Path used to search for diff files. |
 | `pretty_name_regex` | - | Regex to prettify the name used for status checks. Will be applied on filename of every found diff file. Included capture groups will be joined with `pretty_name_separator` and used as name of status check. If not present or not groups matched, the path to the diff file will be used.|
 | `pretty_name_separator` | `/` | Separator used to create status check name. Only used if `pretty_name_regex` is set. |
+| `no_diff_conclusion` | `failure` | Use this conclusion when no diff is found. Choose from `success` or `failure`. |
 
 ## Screenshots
 

@@ -20,6 +20,10 @@ inputs:
     description: 'Separator used to create status check name. Only used if `pretty_name_regex` is set.'
     required: false
     default: '/'
+  no_diff_conclusion:
+    description: 'Use this conclusion when no diff is found. Choose from `success` or `failure`.'
+    required: false
+    default: 'failure'
 runs:
   using: node16
   main: dist/index.js
