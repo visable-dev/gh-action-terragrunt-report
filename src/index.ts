@@ -38,13 +38,15 @@ interface Result {
   prettyFilename?: string;
   check: Check;
 }
+
+type Conclusion = 'failure' | 'neutral' | 'success';
 interface Check {
   [parameter: string]: unknown;
   owner: string;
   repo: string;
   head_sha: string;
   name: string;
-  conclusion: 'failure' | 'neutral' | 'success';
+  conclusion: Conclusion;
   output: {
     title: string;
     summary: string;
@@ -143,7 +145,10 @@ ${diff}
     });
   }
   if (results.length === 0) {
-    let conclusion: 'failure' | 'neutral' | 'success' = inputs.no_diff_conclusion
+    let conclusion: Conclusion = 'failure';
+    if (inputs.no_diff_conclusion === 'success') {
+      conclusion = inputs.no_diff_conclusion;
+    }
     results.push({
       check: {
         ...ctx.repo,
