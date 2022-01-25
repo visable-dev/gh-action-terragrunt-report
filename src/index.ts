@@ -143,12 +143,13 @@ ${diff}
     });
   }
   if (results.length === 0) {
+    let conclusion: 'failure' | 'neutral' | 'success' = inputs.no_diff_conclusion
     results.push({
       check: {
         ...ctx.repo,
         head_sha: pullRequest.head.sha,
         name: 'Terragrunt Report',
-        conclusion: inputs.no_diff_conclusion,
+        conclusion: conclusion,
         output: {
           title: 'No diff files found!',
           summary: 'No diff files found!',
