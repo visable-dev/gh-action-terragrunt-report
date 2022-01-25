@@ -38,13 +38,16 @@ interface Result {
   prettyFilename?: string;
   check: Check;
 }
+
+type Conclusion = 'failure' | 'neutral' | 'success';
+
 interface Check {
   [parameter: string]: unknown;
   owner: string;
   repo: string;
   head_sha: string;
   name: string;
-  conclusion: 'failure' | 'neutral' | 'success';
+  conclusion: Conclusion;
   output: {
     title: string;
     summary: string;
@@ -143,12 +146,16 @@ ${diff}
     });
   }
   if (results.length === 0) {
+    let conclusion: Conclusion = 'failure';
+    if (inputs.no_diff_conclusion === 'success') {
+      conclusion = inputs.no_diff_conclusion;
+    }
     results.push({
       check: {
         ...ctx.repo,
         head_sha: pullRequest.head.sha,
         name: 'Terragrunt Report',
-        conclusion: inputs.no_diff_conclusion,
+        conclusion: conclusion,
         output: {
           title: 'No diff files found!',
           summary: 'No diff files found!',
