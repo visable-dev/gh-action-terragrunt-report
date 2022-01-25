@@ -40,6 +40,7 @@ interface Result {
 }
 
 type Conclusion = 'failure' | 'neutral' | 'success';
+
 interface Check {
   [parameter: string]: unknown;
   owner: string;
