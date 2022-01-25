@@ -13,6 +13,7 @@ const inputs = {
   pretty_name_separator: core.getInput('pretty_name_separator', {
     required: false,
   }),
+  no_diff_conclusion: core.getInput('no_diff_conclusion', {required: false}),
 };
 
 const ctx = github.context;
@@ -147,7 +148,7 @@ ${diff}
         ...ctx.repo,
         head_sha: pullRequest.head.sha,
         name: 'Terragrunt Report',
-        conclusion: 'failure',
+        conclusion: inputs.no_diff_conclusion,
         output: {
           title: 'No diff files found!',
           summary: 'No diff files found!',
