@@ -55,6 +55,7 @@ const diffChangeRegex =
   /^Plan: (\d+) to add, (\d+) to change, (\d+) to destroy./m;
 
 const noChangesStr = "No changes. Your infrastructure matches the configuration."
+const onlyOutputChangedStr = "You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure."
 
 async function run() {
   if (ctx.eventName !== 'pull_request') {
@@ -98,7 +99,9 @@ async function run() {
       destroy: 0,
     };
 
-    if (diff.match(noChangesStr)) {
+    const diffWithoutNewlines = diff.replace(/\n/g, " ");
+    console.info(diffWithoutNewlines)
+    if (diffWithoutNewlines.match(noChangesStr) || diffWithoutNewlines.match(onlyOutputChangedStr)) {
       results.push({
         filename,
         prettyFilename,
@@ -113,7 +116,7 @@ async function run() {
       })
       continue
     }
-    
+
     // Diff is supposed to contain some changes
     const res = diff.match(diffChangeRegex);
     if (res === null) {
