@@ -42,10 +42,6 @@ interface Result {
 type Conclusion = 'failure' | 'neutral' | 'success';
 
 interface Check {
-  [parameter: string]: unknown;
-  owner: string;
-  repo: string;
-  head_sha: string;
   name: string;
   conclusion: Conclusion;
   output: {
@@ -107,8 +103,6 @@ async function run() {
         filename,
         prettyFilename,
         check: {
-          ...ctx.repo,
-          head_sha: pullRequest.head.sha,
           name: name,
           conclusion: "success",
           output: {
@@ -145,8 +139,6 @@ async function run() {
       filename,
       prettyFilename,
       check: {
-        ...ctx.repo,
-        head_sha: pullRequest.head.sha,
         name: name,
         conclusion: conclusion,
         output: {
@@ -168,8 +160,6 @@ ${diff}
     }
     results.push({
       check: {
-        ...ctx.repo,
-        head_sha: pullRequest.head.sha,
         name: 'Terragrunt Report',
         conclusion: conclusion,
         output: {
@@ -185,7 +175,11 @@ ${diff}
 
   const octokit = github.getOctokit(inputs.github_token);
   for (const result of results) {
-    const check = result.check;
+    const check = {
+      ...result.check,
+      ...ctx.repo,
+      head_sha: pullRequest.head.sha,
+    };
     if (check.output.text && check.output.text.length > 65535 && result.filename) {
       // output.text cannot be bigger than 65535, therefore upload diff file as artifact
       // and replace output.text with hint
