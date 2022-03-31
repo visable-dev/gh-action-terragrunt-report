@@ -51,12 +51,14 @@ interface Check {
   output: {
     title: string;
     summary: string;
-    text: string;
+    text?: string;
   };
 }
 
 const diffChangeRegex =
   /^Plan: (\d+) to add, (\d+) to change, (\d+) to destroy./m;
+
+const noChangesStr = "No changes. Your infrastructure matches the configuration."
 
 async function run() {
   if (ctx.eventName !== 'pull_request') {
@@ -76,33 +78,6 @@ async function run() {
   for await (const filename of globber.globGenerator()) {
     core.info(`Processing file ${filename}`);
 
-    const diff = `${await promises.readFile(filename)}`;
-    let plan = {
-      add: 0,
-      change: 0,
-      destroy: 0,
-    };
-
-    if (
-      !diff.match('No changes. Your infrastructure matches the configuration.')
-    ) {
-      // Diff is supposed to contain some changes
-      const res = diff.match(diffChangeRegex);
-      if (res === null) {
-        console.error(diff);
-        throw `File ${filename} has wrong format! Please ensure that \`diff_file_suffix\` only points to valid diff files.`;
-      }
-      plan = {
-        add: Number(res[1]),
-        change: Number(res[2]),
-        destroy: Number(res[3]),
-      };
-    }
-
-    const summary = `Plan: ${plan.add} to add, ${plan.change} to change, ${plan.destroy} to destroy.`;
-
-    core.info(`Summary: ${summary}`);
-
     const prettyFilename = filename.replace(inputs.search_path, '');
     let name = prettyFilename;
 
@@ -119,6 +94,47 @@ async function run() {
         );
       }
     }
+
+    const diff = `${await promises.readFile(filename)}`;
+    let plan = {
+      add: 0,
+      change: 0,
+      destroy: 0,
+    };
+
+    if (diff.match(noChangesStr)) {
+      results.push({
+        filename,
+        prettyFilename,
+        check: {
+          ...ctx.repo,
+          head_sha: pullRequest.head.sha,
+          name: name,
+          conclusion: "success",
+          output: {
+            summary: noChangesStr,
+            title: noChangesStr
+          }
+        }
+      })
+      continue
+    }
+    
+    // Diff is supposed to contain some changes
+    const res = diff.match(diffChangeRegex);
+    if (res === null) {
+      console.error(diff);
+      throw `File ${filename} has wrong format! Please ensure that \`diff_file_suffix\` only points to valid diff files.`;
+    }
+    plan = {
+      add: Number(res[1]),
+      change: Number(res[2]),
+      destroy: Number(res[3]),
+    };
+
+    const summary = `Plan: ${plan.add} to add, ${plan.change} to change, ${plan.destroy} to destroy.`;
+
+    core.info(`Summary: ${summary}`);
 
     let conclusion: 'success' | 'neutral' = 'success';
     if (plan.add > 0 || plan.change > 0 || plan.destroy > 0) {
@@ -170,7 +186,7 @@ ${diff}
   const octokit = github.getOctokit(inputs.github_token);
   for (const result of results) {
     const check = result.check;
-    if (check.output.text.length > 65535 && result.filename) {
+    if (check.output.text && check.output.text.length > 65535 && result.filename) {
       // output.text cannot be bigger than 65535, therefore upload diff file as artifact
       // and replace output.text with hint
       const artifactClient = artifact.create();
