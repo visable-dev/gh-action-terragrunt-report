@@ -11,22 +11,22 @@ jobs:
       tg_version: 'latest'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v1.1.1
+        uses: autero1/action-terragrunt@v3.0.2
         with:
-          terragrunt_version: latest
+          terragrunt-version: latest
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1.2.1
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
       - name: Plan all
         run: |
           cd example_project
           terragrunt run-all plan
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '20'
           cache: 'npm'
       - run: npm install
       - run: npm run build
