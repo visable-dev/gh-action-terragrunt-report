@@ -47,13 +47,13 @@ jobs:
       tg_version: 'latest'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v1.1.1
+        uses: autero1/action-terragrunt@v3.0.2
         with:
           terragrunt_version: latest
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1.2.1
+        uses: hashicorp/setup-terraform@v3.0.0
         with:
           terraform_wrapper: false
       - name: Plan all

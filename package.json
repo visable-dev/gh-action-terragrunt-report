@@ -15,7 +15,7 @@
     "url": "git+https://github.com/littldr/gh-action-terragrunt-report.git"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "keywords": [
     "actions",
