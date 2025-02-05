@@ -1,5 +1,6 @@
 # gh-action-terragrunt-report
 
+
 Github Action which creates status checks for multiple terraform plan outputs in pull requests.
 
 This action is inspired by the [ahmadnassri/action-terraform-report](https://github.com/ahmadnassri/action-terraform-report) action.
