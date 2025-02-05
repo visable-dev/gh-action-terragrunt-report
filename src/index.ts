@@ -1,8 +1,8 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import * as artifact from '@actions/artifact';
+import {DefaultArtifactClient} from '@actions/artifact';
 import * as glob from '@actions/glob';
-import {PullRequestEvent} from '@octokit/webhooks-definitions/schema';
+import {PullRequestEvent} from '@octokit/webhooks-types';
 import {promises} from 'fs';
 
 const inputs = {
@@ -20,7 +20,7 @@ const ctx = github.context;
 
 const errorHandler: NodeJS.UncaughtExceptionListener = error => {
   core.setFailed(error);
-  // eslint-disable-next-line no-process-exit
+  // eslint-disable-next-line n/no-process-exit
   process.exit(1);
 };
 
@@ -54,8 +54,10 @@ interface Check {
 const diffChangeRegex =
   /^Plan: (\d+) to add, (\d+) to change, (\d+) to destroy./m;
 
-const noChangesStr = "No changes. Your infrastructure matches the configuration."
-const onlyOutputChangedStr = "You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure."
+const noChangesStr =
+  'No changes. Your infrastructure matches the configuration.';
+const onlyOutputChangedStr =
+  'You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.';
 
 async function run() {
   if (ctx.eventName !== 'pull_request') {
@@ -70,7 +72,7 @@ async function run() {
   const results: Array<Result> = [];
 
   const globber = await glob.create(
-    `${inputs.search_path}/**/*${inputs.diff_file_suffix}`
+    `${inputs.search_path}/**/*${inputs.diff_file_suffix}`,
   );
   for await (const filename of globber.globGenerator()) {
     core.info(`Processing file ${filename}`);
@@ -87,7 +89,7 @@ async function run() {
           .join(inputs.pretty_name_separator); // join with defined separator
       } else {
         core.warning(
-          `No match found for filename '${prettyFilename} with pretty_name_regex ${prettyNameRegex}.'`
+          `No match found for filename '${prettyFilename} with pretty_name_regex ${prettyNameRegex}.'`,
         );
       }
     }
@@ -99,22 +101,25 @@ async function run() {
       destroy: 0,
     };
 
-    const diffWithoutNewlines = diff.replace(/\n/g, " ");
-    console.info(diffWithoutNewlines)
-    if (diffWithoutNewlines.match(noChangesStr) || diffWithoutNewlines.match(onlyOutputChangedStr)) {
+    const diffWithoutNewlines = diff.replace(/\n/g, ' ');
+    console.info(diffWithoutNewlines);
+    if (
+      diffWithoutNewlines.match(noChangesStr) ||
+      diffWithoutNewlines.match(onlyOutputChangedStr)
+    ) {
       results.push({
         filename,
         prettyFilename,
         check: {
           name: name,
-          conclusion: "success",
+          conclusion: 'success',
           output: {
             summary: noChangesStr,
-            title: noChangesStr
-          }
-        }
-      })
-      continue
+            title: noChangesStr,
+          },
+        },
+      });
+      continue;
     }
 
     // Diff is supposed to contain some changes
@@ -183,10 +188,14 @@ ${diff}
       ...ctx.repo,
       head_sha: pullRequest.head.sha,
     };
-    if (check.output.text && check.output.text.length > 65535 && result.filename) {
+    if (
+      check.output.text &&
+      check.output.text.length > 65535 &&
+      result.filename
+    ) {
       // output.text cannot be bigger than 65535, therefore upload diff file as artifact
       // and replace output.text with hint
-      const artifactClient = artifact.create();
+      const artifactClient = new DefaultArtifactClient();
       // Following characters are not allowed as artifact name: Double quote ", Colon :, Less than <, Greater than >, Vertical bar |, Asterisk *, Question mark ?, Carriage return \r, Line feed \n, Backslash \, Forward slash /
       // See: https://github.com/actions/toolkit/blob/main/packages/artifact/src/internal/path-and-artifact-name-validation.ts#L11
       const artifactName = check.name.replace(/[/\\<>"':|*?\r\n]/g, '-');
@@ -194,16 +203,17 @@ ${diff}
         artifactName,
         [result.filename],
         inputs.search_path,
-        {continueOnError: true}
       );
       check.output.text = `File ${result.prettyFilename} is too big. It was uploaded as an artifact. Please download it from [the actions overview of this run](${linkToActionRunOverview}).`;
     }
 
     const resp = await octokit.rest.checks.create(check);
     core.info(
-      `Created check ${resp.data.name} (${resp.data.id}): ${resp.data.html_url}`
+      `Created check ${resp.data.name} (${resp.data.id}): ${resp.data.html_url}`,
     );
   }
 }
 
-run();
+run().catch(error => {
+  core.setFailed(error.message);
+});
