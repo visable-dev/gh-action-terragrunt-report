@@ -4,11 +4,18 @@ import {DefaultArtifactClient} from '@actions/artifact';
 import * as glob from '@actions/glob';
 import {PullRequestEvent} from '@octokit/webhooks-types';
 import {promises} from 'fs';
+import {
+  analyzeDiff,
+  emptyResultsConclusion,
+  resolvePrettyName,
+  sanitizeArtifactName,
+  shouldUploadArtifact,
+} from './lib/report';
 
 const inputs = {
   github_token: core.getInput('github_token', {required: false}),
-  diff_file_suffix: core.getInput('diff_file_suffix', {required: true}),
-  search_path: core.getInput('search_path', {required: true}),
+  diff_file_suffix: core.getInput('diff_file_suffix', {required: false}),
+  search_path: core.getInput('search_path', {required: false}),
   pretty_name_regex: core.getInput('pretty_name_regex', {required: false}),
   pretty_name_separator: core.getInput('pretty_name_separator', {
     required: false,
@@ -51,14 +58,6 @@ interface Check {
   };
 }
 
-const diffChangeRegex =
-  /^Plan: (\d+) to add, (\d+) to change, (\d+) to destroy./m;
-
-const noChangesStr =
-  'No changes. Your infrastructure matches the configuration.';
-const onlyOutputChangedStr =
-  'You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.';
-
 async function run() {
   if (ctx.eventName !== 'pull_request') {
     throw 'Cannot execute action outside of pull request!';
@@ -78,98 +77,41 @@ async function run() {
     core.info(`Processing file ${filename}`);
 
     const prettyFilename = filename.replace(inputs.search_path, '');
-    let name = prettyFilename;
-
-    if (prettyNameRegex) {
-      const matches = prettyFilename.match(prettyNameRegex);
-      if (matches) {
-        name = matches
-          .slice(1) // Skip first entry
-          .filter(n => n) // filter undefined capture groups
-          .join(inputs.pretty_name_separator); // join with defined separator
-      } else {
-        core.warning(
-          `No match found for filename '${prettyFilename}' with pretty_name_regex ${prettyNameRegex}.`,
-        );
-      }
+    const prettyName = resolvePrettyName(
+      prettyFilename,
+      prettyNameRegex,
+      inputs.pretty_name_separator,
+    );
+    if (prettyName.warning) {
+      core.warning(prettyName.warning);
     }
 
     const diff = `${await promises.readFile(filename)}`;
-    let plan = {
-      add: 0,
-      change: 0,
-      destroy: 0,
-    };
+    console.info(diff.replace(/\n/g, ' '));
 
-    const diffWithoutNewlines = diff.replace(/\n/g, ' ');
-    console.info(diffWithoutNewlines);
-    if (
-      diffWithoutNewlines.match(noChangesStr) ||
-      diffWithoutNewlines.match(onlyOutputChangedStr)
-    ) {
-      results.push({
-        filename,
-        prettyFilename,
-        check: {
-          name: name,
-          conclusion: 'success',
-          output: {
-            summary: noChangesStr,
-            title: noChangesStr,
-          },
-        },
-      });
-      continue;
-    }
-
-    // Diff is supposed to contain some changes
-    const res = diff.match(diffChangeRegex);
-    if (res === null) {
+    let analyzed;
+    try {
+      analyzed = analyzeDiff(diff, prettyFilename);
+    } catch (error) {
       console.error(diff);
       throw `File ${filename} has wrong format! Please ensure that \`diff_file_suffix\` only points to valid diff files.`;
-    }
-    plan = {
-      add: Number(res[1]),
-      change: Number(res[2]),
-      destroy: Number(res[3]),
-    };
-
-    const summary = `Plan: ${plan.add} to add, ${plan.change} to change, ${plan.destroy} to destroy.`;
-
-    core.info(`Summary: ${summary}`);
-
-    let conclusion: 'success' | 'neutral' = 'success';
-    if (plan.add > 0 || plan.change > 0 || plan.destroy > 0) {
-      conclusion = 'neutral';
     }
 
     results.push({
       filename,
       prettyFilename,
       check: {
-        name: name,
-        conclusion: conclusion,
-        output: {
-          title: summary,
-          summary: `Please find below the full plan for \`${prettyFilename}\`.`,
-          text: `
-\`\`\`terraform
-${diff}
-\`\`\`
-`,
-        },
+        name: prettyName.name,
+        conclusion: analyzed.conclusion,
+        output: analyzed.output,
       },
     });
   }
   if (results.length === 0) {
-    let conclusion: Conclusion = 'failure';
-    if (inputs.no_diff_conclusion === 'success') {
-      conclusion = inputs.no_diff_conclusion;
-    }
     results.push({
       check: {
         name: 'Terragrunt Report',
-        conclusion: conclusion,
+        conclusion: emptyResultsConclusion(inputs.no_diff_conclusion),
         output: {
           title: 'No diff files found!',
           summary: 'No diff files found!',
@@ -188,17 +130,9 @@ ${diff}
       ...ctx.repo,
       head_sha: pullRequest.head.sha,
     };
-    if (
-      check.output.text &&
-      check.output.text.length > 65535 &&
-      result.filename
-    ) {
-      // output.text cannot be bigger than 65535, therefore upload diff file as artifact
-      // and replace output.text with hint
+    if (shouldUploadArtifact(check.output.text) && result.filename) {
       const artifactClient = new DefaultArtifactClient();
-      // Following characters are not allowed as artifact name: Double quote ", Colon :, Less than <, Greater than >, Vertical bar |, Asterisk *, Question mark ?, Carriage return \r, Line feed \n, Backslash \, Forward slash /
-      // See: https://github.com/actions/toolkit/blob/main/packages/artifact/src/internal/path-and-artifact-name-validation.ts#L11
-      const artifactName = check.name.replace(/[/\\<>"':|*?\r\n]/g, '-');
+      const artifactName = sanitizeArtifactName(check.name);
       await artifactClient.uploadArtifact(
         artifactName,
         [result.filename],
