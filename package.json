@@ -1,7 +1,7 @@
 {
   "name": "gh-action-terragrunt-report",
   "version": "1.0.0",
-  "description": "Visualizes multiple terraform plan outputs after `terragrunt run-all plan` run",
+  "description": "Visualizes multiple terraform plan outputs after `terragrunt run --all plan` run",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -1,5 +1,5 @@
 name: 'Terragrunt report checks'
-description: 'Visualizes multiple terraform plan via status checks after `terragrunt run-all plan` run'
+description: 'Visualizes multiple terraform plan via status checks after `terragrunt run --all plan` run'
 inputs:
   github_token:
     description: 'GitHub token used to interact with GitHub API.'
