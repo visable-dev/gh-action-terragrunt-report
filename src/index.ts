@@ -89,7 +89,7 @@ async function run() {
           .join(inputs.pretty_name_separator); // join with defined separator
       } else {
         core.warning(
-          `No match found for filename '${prettyFilename} with pretty_name_regex ${prettyNameRegex}.'`,
+          `No match found for filename '${prettyFilename}' with pretty_name_regex ${prettyNameRegex}.`,
         );
       }
     }
