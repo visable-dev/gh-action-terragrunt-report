@@ -1,7 +1,0 @@
-.terraform
-*.generated.tf
-*.tfplan
-*.diff
-node_modules/
-.DS_Store
-/.idea/
