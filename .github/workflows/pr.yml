@@ -2,6 +2,10 @@ name: PR
 on:
   pull_request:
 
+permissions:
+  checks: write
+  contents: read
+
 jobs:
   test:
     name: 'Terragrunt'
@@ -29,12 +33,11 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-      - run: npm install
+      - run: npm ci
+      - run: npm run lint
       - run: npm run build
-      - name: Report plans with pretty name
+      - name: Report plans
         uses: ./
         with:
           pretty_name_regex: '/example_project/?(\w+)?/(\w+).diff'
           pretty_name_separator: '/'
-      - name: Report plans with default name
-        uses: ./

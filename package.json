@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/littldr/gh-action-terragrunt-report.git"
+    "url": "git+https://github.com/visable-dev/gh-action-terragrunt-report.git"
   },
   "engines": {
     "node": ">=24"
@@ -29,9 +29,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/littldr/gh-action-terragrunt-report/issues"
+    "url": "https://github.com/visable-dev/gh-action-terragrunt-report/issues"
   },
-  "homepage": "https://github.com/littldr/gh-action-terragrunt-report#readme",
+  "homepage": "https://github.com/visable-dev/gh-action-terragrunt-report#readme",
   "dependencies": {
     "@actions/artifact": "^2.2.1",
     "@actions/core": "^1.11.1",
