@@ -1,7 +1,7 @@
 {
   "name": "gh-action-terragrunt-report",
   "version": "1.0.0",
-  "description": "Visualizes multiple terraform plan outputs after `terragrunt run-all plan` run",
+  "description": "Visualizes multiple terraform plan outputs after `terragrunt run --all plan` run",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,7 +15,7 @@
     "url": "git+https://github.com/littldr/gh-action-terragrunt-report.git"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "keywords": [
     "actions",
@@ -41,7 +41,7 @@
     "@octokit/webhooks-types": "^7.6.1"
   },
   "devDependencies": {
-    "@types/node": "^20.14.8",
+    "@types/node": "^24.0.0",
     "@vercel/ncc": "^0.38.3",
     "gts": "^6.0.2",
     "typescript": "^5.7.3"
