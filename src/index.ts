@@ -6,7 +6,7 @@ import {PullRequestEvent} from '@octokit/webhooks-types';
 import {promises} from 'fs';
 
 const inputs = {
-  github_token: core.getInput('github_token', {required: true}),
+  github_token: core.getInput('github_token', {required: false}),
   diff_file_suffix: core.getInput('diff_file_suffix', {required: true}),
   search_path: core.getInput('search_path', {required: true}),
   pretty_name_regex: core.getInput('pretty_name_regex', {required: false}),

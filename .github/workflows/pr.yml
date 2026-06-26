@@ -15,21 +15,23 @@ jobs:
       TG_VERSION: '0.93.8'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v3.0.2
-        with:
-          terragrunt-version: ${{ env.TG_VERSION }}
+        uses: actions/checkout@v6
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_wrapper: false
           terraform_version: ${{ env.TF_VERSION }}
+      - name: Setup Terragrunt
+        run: |
+          curl -fsSL "https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.TG_VERSION }}/terragrunt_linux_amd64" \
+            -o /usr/local/bin/terragrunt
+          chmod +x /usr/local/bin/terragrunt
+          terragrunt --version
       - name: Plan all
         run: |
           cd example_project
           terragrunt run --all plan --non-interactive
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
@@ -39,5 +41,5 @@ jobs:
       - name: Report plans
         uses: ./
         with:
-          pretty_name_regex: '/example_project/?(\w+)?/(\w+).diff'
+          pretty_name_regex: '/example_project/([\w/]+)/(\w+)\.diff'
           pretty_name_separator: '/'
