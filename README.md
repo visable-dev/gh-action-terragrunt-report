@@ -50,15 +50,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v3.0.2
-        with:
-          terragrunt-version: ${{ env.TG_VERSION }}
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_wrapper: false
           terraform_version: ${{ env.TF_VERSION }}
+      - name: Setup Terragrunt
+        run: |
+          curl -fsSL "https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.TG_VERSION }}/terragrunt_linux_amd64" \
+            -o /usr/local/bin/terragrunt
+          chmod +x /usr/local/bin/terragrunt
       - name: Plan all
         run: |
           cd example_project
@@ -83,17 +84,17 @@ If `pretty_name_regex` is not set or no match found, the filename will be used a
 If the generated diff files in your project look like this:
 
 ```
-/example_project/prod.diff
-/example_project/qa/box1.diff
-/example_project/stage.diff
+/example_project/prod/prod.diff
+/example_project/qa/box1/box1.diff
+/example_project/stage/stage.diff
 ```
 
-you can set `pretty_name_regex` to `/example_project/?(\w+)?/(\w+).diff`, so that the converted names will look as following:
+you can set `pretty_name_regex` to `/example_project/([\w/]+)/(\w+)\.diff`, so that the converted names will look as following:
 
 ```
-prod
-qa/box1
-stage
+prod/prod
+qa/box1/box1
+stage/stage
 ```
 
 ## Inputs
