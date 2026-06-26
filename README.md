@@ -44,9 +44,6 @@ jobs:
   test:
     name: 'Terragrunt'
     runs-on: ubuntu-latest
-    env:
-      TF_VERSION: '1.13.5'
-      TG_VERSION: '0.93.8'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -54,10 +51,10 @@ jobs:
         uses: hashicorp/setup-terraform@v4
         with:
           terraform_wrapper: false
-          terraform_version: ${{ env.TF_VERSION }}
+          terraform_version: ${{ vars.TERRAFORM_VERSION }}
       - name: Setup Terragrunt
         run: |
-          curl -fsSL "https://github.com/gruntwork-io/terragrunt/releases/download/v${{ env.TG_VERSION }}/terragrunt_linux_amd64" \
+          curl -fsSL "https://github.com/gruntwork-io/terragrunt/releases/download/v${{ vars.TERRAGRUNT_VERSION }}/terragrunt_linux_amd64" \
             -o /usr/local/bin/terragrunt
           chmod +x /usr/local/bin/terragrunt
       - name: Plan all

@@ -5,3 +5,6 @@
 node_modules/
 .DS_Store
 /.idea/
+.terraform-version
+.terragrunt-version
+.tool-versions
