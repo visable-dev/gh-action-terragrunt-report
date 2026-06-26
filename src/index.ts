@@ -87,13 +87,12 @@ async function run() {
     }
 
     const diff = `${await promises.readFile(filename)}`;
-    console.info(diff.replace(/\n/g, ' '));
 
     let analyzed;
     try {
       analyzed = analyzeDiff(diff, prettyFilename);
-    } catch (error) {
-      console.error(diff);
+    } catch {
+      core.error(diff);
       throw `File ${filename} has wrong format! Please ensure that \`diff_file_suffix\` only points to valid diff files.`;
     }
 

@@ -11,8 +11,8 @@ jobs:
     name: 'Terragrunt'
     runs-on: ubuntu-latest
     env:
-      TF_VERSION: '1.13.5'
-      TG_VERSION: '0.93.8'
+      TF_VERSION: ${{ vars.CI_TF_VERSION }}
+      TG_VERSION: ${{ vars.CI_TG_VERSION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6

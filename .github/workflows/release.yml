@@ -21,6 +21,30 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
-      - uses: hernanvicente/build-and-tag-action@v2
+      - name: Publish compiled action to release tags
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          workdir="$(mktemp -d)"
+          cp action.yml "$workdir/"
+          cp -r dist "$workdir/"
+
+          cd "$workdir"
+          git init -q
+          git add action.yml dist
+          git commit -q -m "Build action for release ${TAG}"
+          git branch -M release
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git push -f origin release:refs/tags/"${TAG}"
+
+          if [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            git push -f origin release:refs/tags/"${TAG%%.*}"
+            git push -f origin release:refs/tags/"${TAG%.*}"
+          fi
