@@ -55,6 +55,24 @@ ${NO_CHANGES_SUMMARY}`;
     assert.equal(result.output.title, NO_CHANGES_SUMMARY);
   });
 
+  it('parses plan summaries that contain imports', () => {
+    const diff = `Plan: 1 to import, 0 to add, 1 to change, 0 to destroy.`;
+
+    const result = analyzeDiff(diff, '/example/prod.diff');
+    assert.equal(result.conclusion, 'neutral');
+    assert.equal(
+      result.output.title,
+      'Plan: 1 to import, 0 to add, 1 to change, 0 to destroy.',
+    );
+  });
+
+  it('treats an import-only plan as a change', () => {
+    const diff = `Plan: 2 to import, 0 to add, 0 to change, 0 to destroy.`;
+
+    const result = analyzeDiff(diff, '/example/prod.diff');
+    assert.equal(result.conclusion, 'neutral');
+  });
+
   it('parses plan summaries and marks changes as neutral', () => {
     const diff = `Plan: 2 to add, 1 to change, 0 to destroy.
 

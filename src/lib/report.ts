@@ -7,7 +7,7 @@ const ONLY_OUTPUT_CHANGED =
   'You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.';
 
 const diffChangeRegex =
-  /^Plan: (\d+) to add, (\d+) to change, (\d+) to destroy./m;
+  /^Plan: (?:(\d+) to import, )?(\d+) to add, (\d+) to change, (\d+) to destroy\./m;
 
 export interface PrettyNameResult {
   name: string;
@@ -74,13 +74,16 @@ export function analyzeDiff(
   }
 
   const plan = {
-    add: Number(planMatch[1]),
-    change: Number(planMatch[2]),
-    destroy: Number(planMatch[3]),
+    import: Number(planMatch[1] ?? 0),
+    add: Number(planMatch[2]),
+    change: Number(planMatch[3]),
+    destroy: Number(planMatch[4]),
   };
-  const summary = `Plan: ${plan.add} to add, ${plan.change} to change, ${plan.destroy} to destroy.`;
+  const summary = `Plan: ${plan.import > 0 ? `${plan.import} to import, ` : ''}${plan.add} to add, ${plan.change} to change, ${plan.destroy} to destroy.`;
   const conclusion =
-    plan.add > 0 || plan.change > 0 || plan.destroy > 0 ? 'neutral' : 'success';
+    plan.import > 0 || plan.add > 0 || plan.change > 0 || plan.destroy > 0
+      ? 'neutral'
+      : 'success';
 
   return {
     conclusion,
